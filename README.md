@@ -15,18 +15,6 @@ here, because it is a 42 MB binary.
 | APK size | 42,607,194 bytes |
 | APK SHA-256 | `3737b2f1d6a96501c2c7a8b8331b29a05681247a3f46ad14b7556f5e1838efbd` |
 
-## Screenshots
-
-Taken on an Android 15 (API 35) emulator running this build.
-
-| Home & mini player | Notification | Lock screen |
-|---|---|---|
-| ![Home](docs/screenshots/03-home-mini-player.jpg) | ![Notification](docs/screenshots/04-notification-shade.jpg) | ![Lock screen](docs/screenshots/07-lockscreen-controls.jpg) |
-
-| Onboarding | About | Launcher |
-|---|---|---|
-| ![Onboarding](docs/screenshots/02-onboarding.jpg) | ![About](docs/screenshots/05-about.jpg) | ![Launcher](docs/screenshots/06-launcher-icon.jpg) |
-
 ## What the rebrand changed
 
 The app is patched at the resource and presentation-literal level — it is the same player underneath,
@@ -46,7 +34,10 @@ Preserved on purpose, and verified after building:
 - the audio engine, `lastwave://` URL scheme, intent actions, Discord/Jam server identifiers and
   the upstream update-check endpoint.
 
-`REPORT.md` documents every modification, the verification method, and the runtime test results.
+`REPORT.md` documents every modification, the verification method, and the runtime test results
+(install, launch, playback, notification, background playback, lock-screen controls, About screen,
+launcher icon). The emulator screenshots those checks refer to were produced during the build and are
+not committed here — the repository deliberately ships without binary captures.
 
 ## Known caveats
 
@@ -117,9 +108,6 @@ api/                 catalog + search API (Bun, no dependencies)
   tests/             unit tests (bun test)
   scripts/smoke.ts   live end-to-end checks against a running instance
   openapi.json       OpenAPI 3.1 description
-docs/branding/       logo and adaptive-icon sources, mask preview
-docs/screenshots/    runtime screenshots from the emulator
-docs/runtime-tests/  full-resolution captures
 scripts/             rebrand + icon generation + ADB helper scripts
 REPORT.md            complete build, modification and runtime-test report
 ```
