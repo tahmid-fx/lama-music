@@ -1,0 +1,328 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Lama Music API",
+    "version": "1.0.0",
+    "description": "Read-only music catalog and search API built on MusicBrainz (metadata) and the iTunes Search API (cover art). No API keys required.",
+    "license": { "name": "MIT", "identifier": "MIT" }
+  },
+  "servers": [{ "url": "http://127.0.0.1:8788", "description": "Local development" }],
+  "tags": [
+    { "name": "catalog", "description": "Artists, albums and tracks" },
+    { "name": "search", "description": "Full-text search" },
+    { "name": "system", "description": "Health and spec" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["system"],
+        "operationId": "getHealth",
+        "summary": "Liveness probe",
+        "responses": {
+          "200": {
+            "description": "Service is up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "const": "ok" },
+                    "service": { "type": "string" },
+                    "version": { "type": "string" },
+                    "uptimeSeconds": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/search": {
+      "get": {
+        "tags": ["search"],
+        "operationId": "search",
+        "summary": "Search artists, albums and tracks",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string", "minLength": 1, "maxLength": 120 }, "description": "Free-text query, e.g. an artist or song name" },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["all", "artist", "album", "track"], "default": "all" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 10000, "default": 0 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results grouped by entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Envelope" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "artists": { "type": "array", "items": { "$ref": "#/components/schemas/Artist" } },
+                            "albums": { "type": "array", "items": { "$ref": "#/components/schemas/Album" } },
+                            "tracks": { "type": "array", "items": { "$ref": "#/components/schemas/Track" } }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "502": { "$ref": "#/components/responses/UpstreamError" }
+        }
+      }
+    },
+    "/v1/artists/{artistId}": {
+      "get": {
+        "tags": ["catalog"],
+        "operationId": "getArtist",
+        "summary": "Artist detail",
+        "parameters": [{ "$ref": "#/components/parameters/ArtistId" }],
+        "responses": {
+          "200": {
+            "description": "Artist",
+            "content": { "application/json": { "schema": { "allOf": [{ "$ref": "#/components/schemas/Envelope" }, { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Artist" } } }] } } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/v1/artists/{artistId}/albums": {
+      "get": {
+        "tags": ["catalog"],
+        "operationId": "getArtistAlbums",
+        "summary": "Albums for an artist",
+        "parameters": [
+          { "$ref": "#/components/parameters/ArtistId" },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["album", "single", "ep", "live", "compilation", "soundtrack"] } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "minimum": 0, "default": 0 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paged albums",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Envelope" },
+                    { "type": "object", "properties": { "data": { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/Album" } }, "total": { "type": "integer" }, "limit": { "type": "integer" }, "offset": { "type": "integer" } } } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/v1/albums/{albumId}": {
+      "get": {
+        "tags": ["catalog"],
+        "operationId": "getAlbum",
+        "summary": "Album detail with editions and tracklist",
+        "parameters": [{ "$ref": "#/components/parameters/AlbumId" }],
+        "responses": {
+          "200": {
+            "description": "Album",
+            "content": { "application/json": { "schema": { "allOf": [{ "$ref": "#/components/schemas/Envelope" }, { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/AlbumDetail" } } }] } } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/v1/tracks/{trackId}": {
+      "get": {
+        "tags": ["catalog"],
+        "operationId": "getTrack",
+        "summary": "Track detail",
+        "parameters": [{ "$ref": "#/components/parameters/TrackId" }],
+        "responses": {
+          "200": {
+            "description": "Track",
+            "content": { "application/json": { "schema": { "allOf": [{ "$ref": "#/components/schemas/Envelope" }, { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Track" } } }] } } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/v1/artwork": {
+      "get": {
+        "tags": ["catalog"],
+        "operationId": "getArtwork",
+        "summary": "Cover art for an artist and album",
+        "parameters": [
+          { "name": "artist", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "album", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artwork URL, or data:null when nothing matched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Envelope" },
+                    { "type": "object", "properties": { "data": { "oneOf": [{ "type": "object", "properties": { "artworkUrl": { "type": "string" }, "size": { "type": "integer" } } }, { "type": "null" }] } } }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "ArtistId": { "name": "artistId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" }, "description": "MusicBrainz artist MBID" },
+      "AlbumId": { "name": "albumId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" }, "description": "MusicBrainz release-group MBID" },
+      "TrackId": { "name": "trackId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" }, "description": "MusicBrainz recording MBID" }
+    },
+    "schemas": {
+      "Envelope": {
+        "type": "object",
+        "properties": {
+          "data": {},
+          "meta": {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string", "examples": ["musicbrainz+itunes"] },
+              "cached": { "type": "boolean" },
+              "tookMs": { "type": "integer" },
+              "warnings": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Present when one upstream search index is temporarily unavailable; the rest of the result is still returned."
+              }
+            }
+          }
+        }
+      },
+      "Artist": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "sortName": { "type": ["string", "null"] },
+          "type": { "type": ["string", "null"] },
+          "country": { "type": ["string", "null"] },
+          "disambiguation": { "type": ["string", "null"] },
+          "lifeSpan": {
+            "type": ["object", "null"],
+            "properties": { "begin": { "type": ["string", "null"] }, "end": { "type": ["string", "null"] }, "ended": { "type": "boolean" } }
+          },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "score": { "type": ["integer", "null"] }
+        }
+      },
+      "Album": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "artist": { "type": "string" },
+          "artistId": { "type": ["string", "null"] },
+          "primaryType": { "type": ["string", "null"] },
+          "secondaryTypes": { "type": "array", "items": { "type": "string" } },
+          "firstReleaseDate": { "type": ["string", "null"] },
+          "score": { "type": ["integer", "null"] },
+          "artworkUrl": { "type": ["string", "null"] }
+        }
+      },
+      "AlbumDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Album" },
+          {
+            "type": "object",
+            "properties": {
+              "releases": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "title": { "type": "string" },
+                    "date": { "type": ["string", "null"] },
+                    "country": { "type": ["string", "null"] },
+                    "trackCount": { "type": "integer" }
+                  }
+                }
+              },
+              "tracks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "position": { "type": "integer" },
+                    "disc": { "type": "integer" },
+                    "title": { "type": "string" },
+                    "recordingId": { "type": ["string", "null"] },
+                    "durationSeconds": { "type": ["integer", "null"] }
+                  }
+                }
+              },
+              "totalDurationSeconds": { "type": ["integer", "null"] }
+            }
+          }
+        ]
+      },
+      "Track": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "artist": { "type": "string" },
+          "artistId": { "type": ["string", "null"] },
+          "album": { "type": ["string", "null"] },
+          "durationSeconds": { "type": ["integer", "null"] },
+          "score": { "type": ["integer", "null"] }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" },
+              "details": {}
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid parameters",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "NotFound": {
+        "description": "Unknown MBID",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "RateLimited": {
+        "description": "Per-IP rate limit exceeded",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "UpstreamError": {
+        "description": "MusicBrainz or iTunes could not be reached",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      }
+    }
+  }
+}
