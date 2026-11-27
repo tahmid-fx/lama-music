@@ -1,0 +1,16 @@
+{
+  "name": "lama-music-api",
+  "version": "1.0.0",
+  "description": "Read-only music catalog and search API for Lama Music, built on MusicBrainz and iTunes open data.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "bun": ">=1.1.0"
+  },
+  "scripts": {
+    "start": "bun src/server.ts",
+    "dev": "bun --watch src/server.ts",
+    "test": "bun test",
+    "smoke": "bun scripts/smoke.ts"
+  }
+}

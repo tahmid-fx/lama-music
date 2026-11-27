@@ -1,0 +1,25 @@
+# Signing material — never publish
+keys/
+*.keystore
+*.jks
+*.p12
+*.pepk
+
+# Large local-only build inputs and outputs
+input/
+out/
+work/
+android-sdk/
+tools/
+testdata/
+
+# Node/Bun
+node_modules/
+bun.lockb
+.env
+.env.*
+!.env.example
+
+# OS/editor noise
+.DS_Store
+*.log
