@@ -22,8 +22,8 @@ The modified application is produced from the unmodified upstream release by the
    `scripts/preview-adaptive.mjs` generate the new branding assets.
 3. `REPORT.md` — records every change made, byte-level, plus the verification that no functional
    component was altered.
-4. Build and signing steps are documented in `REPORT.md` so the modified binary can be reproduced
-   from the upstream APK by anyone.
+4. Build and signing steps are documented in `REPORT.md` (§ "Rebuild") so the modified binary can be
+   reproduced from the upstream APK by anyone.
 
 No upstream source file was modified: the changes are limited to presentation resources (strings,
 icons, theme name) and user-visible text literals, so the upstream source at the linked repository,
