@@ -4,8 +4,8 @@ A rebranded build of the open-source **LastWave** Android music player, plus a s
 **catalog & search API** for it.
 
 This repository holds the branding work (scripts, icon sources, build/runtime reports) and the API.
-The signed APK is attached to the [v5.3.0 release](../../releases/tag/v5.3.0) rather than committed
-here, because it is a 42 MB binary.
+The signed APK (42,607,194 bytes) is not stored in the repository; it belongs on the
+[v5.3.0 release](../../releases/tag/v5.3.0) page as a downloadable asset.
 
 | | |
 |---|---|
